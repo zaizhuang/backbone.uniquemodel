@@ -74,6 +74,7 @@
     this.storage = null;
     if (storageAdapter === 'localStorage') {
       this.storage = new LocalStorageAdapter(this.modelName);
+      this.restoreFromStorage();
     }
 
     if (this.storage) {
@@ -89,6 +90,7 @@
     // Backbone collections need prototype of wrapped class
     modelConstructor.prototype = this.Model.prototype;
     this.modelConstructor = modelConstructor;
+
   }
 
   _.extend(ModelCache.prototype, {
@@ -105,6 +107,13 @@
       }
 
       return instance;
+    },
+
+    restoreFromStorage: function () {
+      var self = this;
+      _.each(this.storage.getAll(), function (instance) {
+        self.add(instance[self.Model.prototype.idAttribute], instance);
+      });
     },
 
     // Event handler when 'sync' is triggered on an instance
@@ -222,11 +231,31 @@
 
   _.extend(LocalStorageAdapter.prototype, {
     handleStorageEvent: function (key, id) {
-      var json = localStorage.getItem(key);
+      var json = this.getItem(key);
       if (!json)
         this.trigger('destroy', id);
       else
         this.trigger('sync', id, JSON.parse(json));
+    },
+
+    getAll: function () {
+      var str = [
+        UniqueModel.STORAGE_NAMESPACE,
+        this.modelName
+      ].join(UniqueModel.STORAGE_KEY_DELIMETER);
+
+      var instances = [];
+
+      for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+        if (localStorage.key(i).indexOf(str) === 0)
+          instances.push(JSON.parse(this.getItem(localStorage.key(i))));
+      }
+
+      return instances;
+    },
+
+    getItem: function(key) {
+        return localStorage.getItem(key);
     },
 
     getStorageKey: function (id) {

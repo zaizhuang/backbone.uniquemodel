@@ -68,6 +68,23 @@
     }));
   });
 
+  test('gets stored instances when localstorage', function () {
+    localStorage.clear();
+
+    var cachedUser = { id: 99, name: 'David' };
+    localStorage.setItem('UniqueModel.User.99', JSON.stringify(cachedUser));
+
+    var addStub = sinon.stub(Backbone.UniqueModel.ModelCache.prototype, 'add');
+
+    var User = Backbone.Model.extend({});
+    var UniqueUser = Backbone.UniqueModel(User, 'User', 'localStorage');
+
+    ok(addStub.calledOnce);
+    equal(addStub.args[0][0], cachedUser.id);
+
+    addStub.restore();
+  });
+
   module('localStorage', {
     setup: function () {
       var self = this;
