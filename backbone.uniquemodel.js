@@ -74,7 +74,7 @@
     this.storage = null;
     if (storageAdapter === 'localStorage') {
       this.storage = new LocalStorageAdapter(this.modelName);
-      this.restoreFromStorage();
+      //this.restoreFromStorage();
     }
 
     if (this.storage) {
@@ -183,6 +183,7 @@
    */
   function LocalStorageAdapter (modelName) {
     this.modelName = modelName;
+    this.store = sessionStorage;
 
     LocalStorageAdapter.instances[modelName] = this;
 
@@ -246,16 +247,16 @@
 
       var instances = [];
 
-      for ( var i = 0, len = localStorage.length; i < len; ++i ) {
-        if (localStorage.key(i).indexOf(str) === 0)
-          instances.push(JSON.parse(this.getItem(localStorage.key(i))));
+      for ( var i = 0, len = this.store.length; i < len; ++i ) {
+        if (this.store.key(i).indexOf(str) === 0)
+          instances.push(JSON.parse(this.getItem(this.store.key(i))));
       }
 
       return instances;
     },
 
     getItem: function(key) {
-        return localStorage.getItem(key);
+        return this.store.getItem(key);
     },
 
     getStorageKey: function (id) {
@@ -274,14 +275,14 @@
         throw 'Cannot save without id';
 
       var json = JSON.stringify(attrs);
-      localStorage.setItem(this.getStorageKey(id), json);
+      this.store.setItem(this.getStorageKey(id), json);
     },
 
     remove: function (id) {
       if (!id)
         throw 'Cannot remove without id';
 
-      localStorage.removeItem(this.getStorageKey(id));
+      this.store.removeItem(this.getStorageKey(id));
     }
   }, Backbone.Events);
 
