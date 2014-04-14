@@ -226,31 +226,11 @@
 
   _.extend(StorageAdapter.prototype, {
     handleStorageEvent: function (key, id) {
-      var json = this.getItem(key);
+      var json = this.store.getItem(key);
       if (!json)
         this.trigger('destroy', id);
       else
         this.trigger('sync', id, JSON.parse(json));
-    },
-
-    getAll: function () {
-      var str = [
-        UniqueModel.STORAGE_NAMESPACE,
-        this.modelName
-      ].join(UniqueModel.STORAGE_KEY_DELIMETER);
-
-      var instances = [];
-
-      for ( var i = 0, len = this.store.length; i < len; ++i ) {
-        if (this.store.key(i).indexOf(str) === 0)
-          instances.push(JSON.parse(this.getItem(this.store.key(i))));
-      }
-
-      return instances;
-    },
-
-    getItem: function(key) {
-        return this.store.getItem(key);
     },
 
     getStorageKey: function (id) {
