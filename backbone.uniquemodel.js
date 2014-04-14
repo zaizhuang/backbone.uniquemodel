@@ -73,8 +73,9 @@
 
     this.storage = null;
     if (storageAdapter === 'localStorage') {
-      this.storage = new LocalStorageAdapter(this.modelName);
-      //this.restoreFromStorage();
+      this.storage = new StorageAdapter(this.modelName, localStorage);
+    } else if (storageAdapter === 'sessionStorage') {
+      this.storage = new StorageAdapter(this.modelName, sessionStorage);
     }
 
     if (this.storage) {
@@ -107,13 +108,6 @@
       }
 
       return instance;
-    },
-
-    restoreFromStorage: function () {
-      var self = this;
-      _.each(this.storage.getAll(), function (instance) {
-        self.add(instance[self.Model.prototype.idAttribute], instance);
-      });
     },
 
     // Event handler when 'sync' is triggered on an instance
@@ -181,27 +175,27 @@
    * so that this can be swapped out for another adapter (i.e.
    * sessionStorage or a localStorage-backed library like lscache)
    */
-  function LocalStorageAdapter (modelName) {
+  function StorageAdapter (modelName, store) {
     this.modelName = modelName;
-    this.store = sessionStorage;
+    this.store = store;
 
-    LocalStorageAdapter.instances[modelName] = this;
+    StorageAdapter.instances[modelName] = this;
 
     // Global listener - only listen once
-    if (!LocalStorageAdapter.listener) {
-      LocalStorageAdapter.listener = window.addEventListener ?
-        window.addEventListener('storage', LocalStorageAdapter.onStorage, false) :
-        window.attachEvent('onstorage', LocalStorageAdapter.onStorage);
+    if (!StorageAdapter.listener) {
+      StorageAdapter.listener = window.addEventListener ?
+        window.addEventListener('storage', StorageAdapter.onStorage, false) :
+        window.attachEvent('onstorage', StorageAdapter.onStorage);
     }
   }
 
-  // Hash of LocalStorageAdapter instances
-  LocalStorageAdapter.instances = {};
+  // Hash of StorageAdapter instances
+  StorageAdapter.instances = {};
 
   // Reference to the global onstorage handler
-  LocalStorageAdapter.listener = null;
+  StorageAdapter.listener = null;
 
-  LocalStorageAdapter.onStorage = function (evt) {
+  StorageAdapter.onStorage = function (evt) {
     // TODO: IE fires onstorage even in the window that fired the
     //       change. Deal with that somehow.
     var key = evt.key;
@@ -223,14 +217,14 @@
     var modelName = match[1];
     var id = match[2];
 
-    var adapter = LocalStorageAdapter.instances[modelName];
+    var adapter = StorageAdapter.instances[modelName];
     if (!adapter)
       return;
 
     adapter.handleStorageEvent(key, id);
   };
 
-  _.extend(LocalStorageAdapter.prototype, {
+  _.extend(StorageAdapter.prototype, {
     handleStorageEvent: function (key, id) {
       var json = this.getItem(key);
       if (!json)
@@ -289,7 +283,7 @@
   // Exports
   _.extend(UniqueModel, {
     ModelCache: ModelCache,
-    LocalStorageAdapter: LocalStorageAdapter
+    StorageAdapter: StorageAdapter
   });
 
   window.Backbone.UniqueModel = UniqueModel;
